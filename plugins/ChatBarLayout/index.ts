@@ -5,10 +5,26 @@
  */
 
 import { definePluginSettings } from "@api/Settings";
-import definePlugin from "@utils/types";
+import definePlugin, { OptionType } from "@utils/types";
+
+import ChatBarSettings from "./ChatBarSettings";
 
 const settings = definePluginSettings({
-    // Define your plugin settings here
+    myToggle: {
+        type: OptionType.BOOLEAN,
+        description: "Enable this cool feature",
+        default: true,
+    },
+    myText: {
+        type: OptionType.STRING,
+        description: "Custom message",
+        default: "Hello world!",
+        placeholder: "Type something..."
+    },
+    ChatBarButtons: {
+        type: OptionType.COMPONENT,
+        component: ChatBarSettings,
+    }
 });
 
 export default definePlugin({
@@ -18,6 +34,7 @@ export default definePlugin({
     settings,
     start() {
         console.log("[ChatBarLayout] Plugin started.");
+        console.log("[ChatBarLayout]",ChatBarSettings);
         const mutationObserver = new MutationObserver(mutations => {
             console.log(mutations);
             const chatbar = document.getElementsByClassName("buttons__74017");
