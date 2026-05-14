@@ -4,7 +4,7 @@
     height: 60px;
     background-color: #131416;
     padding: 5px;
-    justify-content: right !important;
+    justify-content: right;
 }
 
 .buttonSlotContainer {
@@ -28,4 +28,29 @@
     border-style: dashed;
     border-color: azure;
     border-width: 1px;
+}
+
+.buttonContainer {
+    height: 65px;
+    background-color: #131416;
+    padding: 5px;
+    margin-bottom: 10px;
+    justify-content: left;
+}
+
+.buttonElementContainer {
+    padding: 7px;
+    border-radius: 9px;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.buttonElementContainer:hover {
+    background-color: #3c3f46;
+    border-radius: 10px;
+}
+
+.buttonElement {
+    width: 20px;
+    height: 20px;
+    display: block;
 }
