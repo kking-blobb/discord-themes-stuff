@@ -39,18 +39,15 @@
 }
 
 .buttonElementContainer {
-    padding: 7px;
-    border-radius: 9px;
-    transition: background-color 0.2s ease-in-out;
-}
-
-.buttonElementContainer:hover {
-    background-color: #3c3f46;
-    border-radius: 10px;
+    display: flex;
+    flex-direction: row;
+    padding: 3px;
+    gap: 5px;
+    align-items: center;
 }
 
 .buttonElement {
-    width: 20px;
-    height: 20px;
-    display: block;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    padding: 0% !important;
 }

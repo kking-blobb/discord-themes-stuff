@@ -7,7 +7,7 @@
 import { definePluginSettings } from "@api/Settings";
 import definePlugin, { OptionType } from "@utils/types";
 
-import ChatBarSettings from "./ChatBarSettings";
+import ChatBarSettings from "./chatBarSettings";
 
 const settings = definePluginSettings({
     myToggle: {
@@ -29,41 +29,31 @@ const settings = definePluginSettings({
 
 export default definePlugin({
     name: "ChatBarLayout",
-    description: "Custom Chat bar",
+    description: "Customize the chatbar",
     authors: [{ name: "kkingblob_", id: 1084261061244489819n }],
     settings,
     start() {
         console.log("[ChatBarLayout] Plugin started.");
-        console.log("[ChatBarLayout]",ChatBarSettings);
         const mutationObserver = new MutationObserver(mutations => {
             console.log(mutations);
-            const chatbar = document.getElementsByClassName("buttons__74017");
-            if (chatbar && chatbar.length > 0) {
-                console.log("[ChatBarLayout] Found Element", chatbar);
-                const GiftButton = document.querySelector('[aria-label="Send a gift"]');
-                const AppButton = document.getElementsByClassName("buttonContainer_e6e74f");
-                if (GiftButton && AppButton) {
-                    console.log("[ChatBarLayout] Found Gift Button and App Button", GiftButton, AppButton);
-                    GiftButton.id = "gift-button";
-                    AppButton[0].id = "app-button";
-                }
-                const ReactionElements = document.getElementsByClassName("expression-picker-chat-input-button");
-                if (ReactionElements) {
-                    console.log("[ChatBarLayout] Found Reaction Button", ReactionElements);
-                    const GifButton = document.querySelector('[aria-label="Open GIF picker"]')?.parentElement;
-                    const StickerButton = document.querySelector('[aria-label="Open sticker picker"]')?.parentElement;
-                    const EmojiButton = document.querySelector('[aria-label="Add Emoji"]')?.parentElement;
-                    if (GifButton && StickerButton && EmojiButton) {
-                        console.log("[ChatBarLayout] Found Reaction Button Elements", GifButton, StickerButton, EmojiButton);
-                        GifButton.id = "gif-button";
-                        StickerButton.id = "sticker-button";
-                        EmojiButton.id = "emoji-button";
-                    }
+            const chatbar = document.querySelector(".buttons__74017");
+            if (chatbar) {
+                console.log("[ChatBarLayout] Found chatbar", chatbar);
+                const buttons = chatbar.children;
+                const buttonsArray = Array.from(buttons ?? []).filter(button => {
+                    return !button.classList.contains("separator_aa63ab") &&
+                    !button.classList.contains("container_aa63ab") &&
+                    button.tagName !== "SPAN";
+                });
+                for (let i = 0; i < buttonsArray.length; i++) {
+                    buttonsArray[i].id = `button-${i}`;
+                    console.log("[ChatBarLayout] Found buttons", buttonsArray);
                 }
             }
         });
-       const BODY = document.body;
-       mutationObserver.observe(BODY, { childList: true, subtree: true });
+        mutationObserver.disconnect();
+        const BODY = document.body;
+        mutationObserver.observe(BODY, { childList: true, subtree: true });
     },
     stop() {
         console.log("[ChatBarLayout] Plugin stopped.");
