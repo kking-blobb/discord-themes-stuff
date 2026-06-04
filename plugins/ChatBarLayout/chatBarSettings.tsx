@@ -19,23 +19,24 @@ export default function ChatBarSettings() {
         child.tagName !== "SPAN"
     );
     const nonButtons = Array.from(children ?? []).filter(child =>
-        child.classList.contains("separator_aa63ab")
+        child.classList.contains("separator_aa63ab") ||
+        (child.classList.contains("vc-chatbar-button") &&
+        child.querySelector(".button__24af7") === null)
     );
+    console.log("[ChatBarLayout] Rendered nonButtons", nonButtons);
     return (
         <div>
-            <div className="buttonContainer wrapper__72c38 ">
+            <div className="buttonContainer wrapper__72c38">
                 <div className="buttonElementContainer">
                     {childrenArray.map((child, index) => (
-                <div key={index} dangerouslySetInnerHTML={{ __html: child.outerHTML }} />
-                ))}
-                <div>
+                        <div key={index} dangerouslySetInnerHTML={{ __html: child.outerHTML }} />
+                    ))}
                     {nonButtons.map((child, index) => (
-                <div className="vc-chatbar-discord-button buttonElement" key={index} dangerouslySetInnerHTML={{ __html: child.outerHTML }} />
-                ))}
+                        <div className="vc-chatbar-discord-button buttonElement" key={index} dangerouslySetInnerHTML={{ __html: child.outerHTML }} />
+                    ))}
+                </div>
             </div>
-        </div>
-            </div>
-            <div className="chatBarButtonPlacement wrapper__72c38 ">
+            <div className="chatBarButtonPlacement wrapper__72c38">
                 <div className="buttonSlotContainer">
                     <div className="buttonSlot"></div>
                 </div>
