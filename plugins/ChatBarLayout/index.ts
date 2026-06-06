@@ -7,7 +7,7 @@
 import { definePluginSettings } from "@api/Settings";
 import definePlugin, { OptionType } from "@utils/types";
 
-import ChatBarSettings from "./chatBarSettings";
+import ChatBarSettings, { SettingsButtons } from "./chatBarSettings";
 
 const settings = definePluginSettings({
     myToggle: {
@@ -38,7 +38,9 @@ export default definePlugin({
             console.log(mutations);
             const chatbar = document.querySelector(".buttons__74017");
             if (chatbar) {
-                console.log("[ChatBarLayout] Found chatbar", chatbar);
+            console.log("[ChatBarLayout] Found chatbar", chatbar);
+                SettingsButtons();
+                console.log("[ChatBarLayout] updated Settings");
                 const buttons = chatbar.children;
                 const buttonsArray = Array.from(buttons ?? []).filter(button => {
                     return !button.classList.contains("separator_aa63ab") &&
@@ -51,7 +53,6 @@ export default definePlugin({
                 }
             }
         });
-        mutationObserver.disconnect();
         const BODY = document.body;
         mutationObserver.observe(BODY, { childList: true, subtree: true });
     },

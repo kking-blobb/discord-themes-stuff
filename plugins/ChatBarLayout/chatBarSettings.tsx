@@ -5,13 +5,14 @@
  */
 
 import "./style.css";
+import "./index";
 
 import { React } from "@webpack/common";
 
 let savedChildrenArray: string[] = [];
 let savedNonButton: string[] = [];
 
-export default function ChatBarSettings() {
+export function SettingsButtons() {
     const buttonParent = document.querySelector(".buttons__74017");
     const children = buttonParent?.children;
     const childrenArray = Array.from(children ?? []).filter(child =>
@@ -20,10 +21,12 @@ export default function ChatBarSettings() {
         !(child.classList.contains("vc-chatbar-button") &&
         child.querySelector(".button__24af7") === null) &&
         child.tagName !== "SPAN"
+
     ).map(child => (child.cloneNode(true) as Element).outerHTML);
     const nonButtons = Array.from(children ?? []).filter(child =>
         (child.classList.contains("vc-chatbar-button") &&
         child.querySelector(".button__24af7") === null)
+
     ).map(child => (child.cloneNode(true) as Element).outerHTML);
     if (children) {
         savedChildrenArray = childrenArray;
@@ -31,6 +34,9 @@ export default function ChatBarSettings() {
     }
     console.log("[ChatBarLayout] updated childrenArray", savedChildrenArray);
     console.log("[ChatBarLayout] updated nonButtons", savedNonButton);
+}
+
+export default function ChatBarSettings() {
     return (
         <div>
             <div className="buttonContainer wrapper__72c38">
