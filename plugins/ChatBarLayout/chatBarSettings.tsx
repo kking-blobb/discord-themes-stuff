@@ -8,6 +8,9 @@ import "./style.css";
 
 import { React } from "@webpack/common";
 
+let savedChildrenArray: string[] = [];
+let savedNonButton: string[] = [];
+
 export default function ChatBarSettings() {
     const buttonParent = document.querySelector(".buttons__74017");
     const children = buttonParent?.children;
@@ -17,23 +20,30 @@ export default function ChatBarSettings() {
         !(child.classList.contains("vc-chatbar-button") &&
         child.querySelector(".button__24af7") === null) &&
         child.tagName !== "SPAN"
-    );
+    ).map(child => (child.cloneNode(true) as Element).outerHTML);
     const nonButtons = Array.from(children ?? []).filter(child =>
-        child.classList.contains("separator_aa63ab") ||
         (child.classList.contains("vc-chatbar-button") &&
         child.querySelector(".button__24af7") === null)
-    );
-    console.log("[ChatBarLayout] Rendered nonButtons", nonButtons);
+    ).map(child => (child.cloneNode(true) as Element).outerHTML);
+    if (children) {
+        savedChildrenArray = childrenArray;
+        savedNonButton = nonButtons;
+    }
+    console.log("[ChatBarLayout] updated childrenArray", savedChildrenArray);
+    console.log("[ChatBarLayout] updated nonButtons", savedNonButton);
     return (
         <div>
             <div className="buttonContainer wrapper__72c38">
                 <div className="buttonElementContainer">
-                    {childrenArray.map((child, index) => (
-                        <div key={index} dangerouslySetInnerHTML={{ __html: child.outerHTML }} />
+                    {savedChildrenArray.map((html, index) => (
+                        <div draggable className="buttonElement" key={index} dangerouslySetInnerHTML={{ __html: html }}/>
                     ))}
-                    {nonButtons.map((child, index) => (
-                        <div className="vc-chatbar-discord-button buttonElement" key={index} dangerouslySetInnerHTML={{ __html: child.outerHTML }} />
+                    {savedNonButton.map((html, index) => (
+                        <div draggable className="vc-chatbar-discord-button buttonElement" key={index} dangerouslySetInnerHTML={{ __html: html }}/>
                     ))}
+                    <div draggable className="vc-chatbar-discord-button buttonElement">
+                        <div className="separator_aa63ab"></div>
+                    </div>
                 </div>
             </div>
             <div className="chatBarButtonPlacement wrapper__72c38">
