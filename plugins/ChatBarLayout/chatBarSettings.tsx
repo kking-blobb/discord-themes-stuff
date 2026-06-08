@@ -28,28 +28,40 @@ export function SettingsButtons() {
         child.querySelector(".button__24af7") === null)
 
     ).map(child => (child.cloneNode(true) as Element).outerHTML);
-    if (children) {
+    const miniChatBar = document.querySelector(".chat_ee72fa");
+    if (children && !miniChatBar) {
         savedChildrenArray = childrenArray;
         savedNonButton = nonButtons;
+        console.log("[ChatBarLayout] updated childrenArray", savedChildrenArray);
+        console.log("[ChatBarLayout] updated nonButtons", savedNonButton);
     }
-    console.log("[ChatBarLayout] updated childrenArray", savedChildrenArray);
-    console.log("[ChatBarLayout] updated nonButtons", savedNonButton);
+    if (savedChildrenArray.length > 0) {
+        return (
+            <div draggable className="vc-chatbar-discord-button buttonElement">
+                <div className="separator_aa63ab"></div>
+            </div>
+        );
+    } else {
+        return (
+            <div style={{ color: "azure" }}>Please load chatbar buttons.</div>
+        );
+    }
 }
 
 export default function ChatBarSettings() {
     return (
-        <div>
+        <>
             <div className="buttonContainer wrapper__72c38">
                 <div className="buttonElementContainer">
                     {savedChildrenArray.map((html, index) => (
-                        <div draggable className="buttonElement" key={index} dangerouslySetInnerHTML={{ __html: html }}/>
+                        <div draggable className="buttonElement" key={index}
+                        dangerouslySetInnerHTML={{ __html: html }}/>
                     ))}
                     {savedNonButton.map((html, index) => (
-                        <div draggable className="vc-chatbar-discord-button buttonElement" key={index} dangerouslySetInnerHTML={{ __html: html }}/>
+                        <div draggable className="vc-chatbar-discord-button buttonElement"
+                        key={index} dangerouslySetInnerHTML={{ __html: html }}/>
                     ))}
-                    <div draggable className="vc-chatbar-discord-button buttonElement">
-                        <div className="separator_aa63ab"></div>
-                    </div>
+                    <SettingsButtons/>
                 </div>
             </div>
             <div className="chatBarButtonPlacement wrapper__72c38">
@@ -57,6 +69,6 @@ export default function ChatBarSettings() {
                     <div className="buttonSlot"></div>
                 </div>
             </div>
-        </div>
+        </>
     );
 }

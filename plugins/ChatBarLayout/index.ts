@@ -37,8 +37,9 @@ export default definePlugin({
         const mutationObserver = new MutationObserver(mutations => {
             console.log(mutations);
             const chatbar = document.querySelector(".buttons__74017");
-            if (chatbar) {
-            console.log("[ChatBarLayout] Found chatbar", chatbar);
+            const miniChatBar = document.querySelector("chat_ee72fa");
+            if (chatbar && !miniChatBar) {
+                console.log("[ChatBarLayout] Found chatbar", chatbar);
                 SettingsButtons();
                 console.log("[ChatBarLayout] updated Settings");
                 const buttons = chatbar.children;
