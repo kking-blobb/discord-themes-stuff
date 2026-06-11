@@ -14,6 +14,7 @@ let savedNonButton: string[] = [];
 
 export function SettingsButtons() {
     const buttonParent = document.querySelector(".buttons__74017");
+    const miniChatBar = document.querySelector(".chat_ee72fa");
     const children = buttonParent?.children;
     const childrenArray = Array.from(children ?? []).filter(child =>
         !child.classList.contains("separator_aa63ab") &&
@@ -28,7 +29,6 @@ export function SettingsButtons() {
         child.querySelector(".button__24af7") === null)
 
     ).map(child => (child.cloneNode(true) as Element).outerHTML);
-    const miniChatBar = document.querySelector(".chat_ee72fa");
     if (children && !miniChatBar) {
         savedChildrenArray = childrenArray;
         savedNonButton = nonButtons;
@@ -43,9 +43,44 @@ export function SettingsButtons() {
         );
     } else {
         return (
-            <div style={{ color: "azure" }}>Please load chatbar buttons.</div>
+            <p style={{ color:"azure" }}>Please load chatbar buttons.</p>
         );
     }
+}
+
+let foundElement = 0;
+let selectedButton: HTMLElement | null = null;
+
+function MouseClicking(e: React.MouseEvent) {
+    const selectedElement = (e.target as HTMLElement).closest(".buttonElement") as HTMLElement;
+    const container = document.querySelector(".layer_bc663c:not([class*=' '])") as HTMLElement;
+    container.appendChild(selectedElement);
+    window.addEventListener("mousemove", MouseMoving);
+    window.addEventListener("mouseup", MouseRelease);
+    selectedButton = selectedElement;
+    foundElement = 1;
+    const elementpos = selectedElement.getBoundingClientRect();
+    console.log("[chatBarLayout] hovering over element", elementpos.left, elementpos.top);
+}
+function MouseMoving(e) {
+    if (foundElement > 0) {
+        const currentButton = selectedButton as HTMLElement;
+        console.log("[chatBarLayout] grabbing Element", currentButton);
+        currentButton?.setAttribute("style", `position: absolute;
+        left: ${e.clientX}px;
+        top: ${e.clientY}px;
+        transform: translate(-50%, -50%);
+        pointer-events: none;`);
+        console.log("[chatbarlayout] mouse position", e.clientX, e.clientY);
+    }
+}
+function MouseRelease() {
+    foundElement = 0;
+    const currentButton = selectedButton as HTMLElement;
+    currentButton.style.pointerEvents = "auto";
+    window.removeEventListener("mousemove", MouseMoving);
+    window.removeEventListener("mouseup", MouseRelease);
+    console.log("[chatBarLayout] letting go element", selectedButton);
 }
 
 export default function ChatBarSettings() {
@@ -54,12 +89,16 @@ export default function ChatBarSettings() {
             <div className="buttonContainer wrapper__72c38">
                 <div className="buttonElementContainer">
                     {savedChildrenArray.map((html, index) => (
-                        <div draggable className="buttonElement" key={index}
+                        <div onMouseDown={MouseClicking} onMouseUp={MouseRelease}
+                        onMouseMove={MouseMoving} key={index}
+                        className=" vc-chatbar-discord-button buttonElement"
                         dangerouslySetInnerHTML={{ __html: html }}/>
                     ))}
                     {savedNonButton.map((html, index) => (
-                        <div draggable className="vc-chatbar-discord-button buttonElement"
-                        key={index} dangerouslySetInnerHTML={{ __html: html }}/>
+                        <div onMouseDown={MouseClicking} onMouseUp={MouseRelease}
+                        onMouseMove={MouseMoving} key={index}
+                        className="vc-chatbar-discord-button buttonElement"
+                        dangerouslySetInnerHTML={{ __html: html }}/>
                     ))}
                     <SettingsButtons/>
                 </div>

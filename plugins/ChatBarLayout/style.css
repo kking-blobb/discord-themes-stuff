@@ -50,5 +50,13 @@
     min-width: 32px !important;
     min-height: 32px !important;
     padding: 0% !important;
-    z-index: 5;
+    cursor: grab;
+}
+
+.buttonElement * {
+    pointer-events: none !important;
+}
+
+.buttonElement:active {
+    cursor: grabbing;
 }
