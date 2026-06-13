@@ -10,7 +10,7 @@
 .buttonSlotContainer {
     height: fit-content;
     width: fit-content;
-    padding: 2px;
+    padding: 3px;
     border-radius: 9px;
     transition: background-color 0.2s ease-in-out;
 }
@@ -20,10 +20,27 @@
     border-radius: 10px;
 }
 
+.slotHoverable {
+    height: 34px;
+    width: 10px;
+    margin: 2px;
+    pointer-events: none;
+    border-radius: 10px;
+    border-style: dashed;
+    border-color: azure;
+    border-width: 1px;
+    transition: width 0.2s ease-in-out;
+}
+
+.slotHoverable:hover {
+    width: 34px;
+}
+
 .buttonSlot {
     height: 34px;
     width: 34px;
     margin: 2px;
+    pointer-events: none;
     border-radius: 10px;
     border-style: dashed;
     border-color: azure;
