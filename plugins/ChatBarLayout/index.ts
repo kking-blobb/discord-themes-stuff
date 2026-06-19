@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import { DataStore } from "@api/index";
 import { definePluginSettings } from "@api/Settings";
 import definePlugin, { OptionType } from "@utils/types";
 
@@ -21,11 +22,23 @@ const settings = definePluginSettings({
         default: "Hello world!",
         placeholder: "Type something..."
     },
-    ChatBarButtons: {
+    chatBarButtons: {
         type: OptionType.COMPONENT,
         component: ChatBarSettings,
     }
 });
+
+export let nonSaved: string[] = [];
+export let saved: string[] = [];
+
+async function loadButtons() {
+    const nonSavedButtons = await DataStore.get("ChatBarLayout.nonSavedLayout") ?? [];
+    const savedButtons = await DataStore.get("ChatBarLayout.savedLayout") ?? [];
+    console.log("[loading] saved", nonSavedButtons.length);
+    console.log("[loading] nonsaved", savedButtons.length);
+    nonSaved = nonSavedButtons;
+    saved = savedButtons;
+}
 
 export default definePlugin({
     name: "ChatBarLayout",
@@ -34,14 +47,12 @@ export default definePlugin({
     settings,
     start() {
         console.log("[ChatBarLayout] Plugin started.");
+        loadButtons();
         const mutationObserver = new MutationObserver(mutations => {
-            console.log(mutations);
             const chatbar = document.querySelector(".buttons__74017");
             const miniChatBar = document.querySelector("chat_ee72fa");
             if (chatbar && !miniChatBar) {
                 console.log("[ChatBarLayout] Found chatbar", chatbar);
-                SettingsButtons();
-                console.log("[ChatBarLayout] updated Settings");
                 const buttons = chatbar.children;
                 const buttonsArray = Array.from(buttons ?? []).filter(button => {
                     return !button.classList.contains("separator_aa63ab") &&
@@ -52,6 +63,8 @@ export default definePlugin({
                     buttonsArray[i].id = `button-${i}`;
                     console.log("[ChatBarLayout] Found buttons", buttonsArray);
                 }
+                SettingsButtons();
+                console.log("[ChatBarLayout] updated Settings");
             }
         });
         const BODY = document.body;

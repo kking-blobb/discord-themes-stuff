@@ -5,11 +5,16 @@
  */
 
 import "./style.css";
-import "./index";
 
+import { DataStore } from "@api/index";
 import { React } from "@webpack/common";
 
+import { nonSaved, saved } from "./index";
+
 let savedChildrenArray: string[] = [];
+
+let foundElement = 0;
+let selectedButton: HTMLElement | null = null;
 
 export function SettingsButtons() {
     const buttonParent = document.querySelector(".buttons__74017");
@@ -23,12 +28,28 @@ export function SettingsButtons() {
     ).map(child => (child.cloneNode(true) as Element).outerHTML);
     console.log("[chatbarlayout] array length", savedChildrenArray.length);
     if (children && !miniChatBar) {
+        if (nonSaved.length > 1) { return; }
         savedChildrenArray = childrenArray;
         console.log("[ChatBarLayout] updated childrenArray", savedChildrenArray);
         return;
     }
-    if (savedChildrenArray.length > 0) {
+    if (savedChildrenArray.length === 0) {
         return (
+            <p style={{ color:"azure" }}>Please load chatbar buttons.</p>
+        );
+    }
+}
+
+function LoadNonSaved() {
+    if (nonSaved.length > 1) {
+        return(
+            nonSaved.map((html, index) => (
+                <div key={index} id={"RemoveWrapperNon"}
+                dangerouslySetInnerHTML={{ __html: html }}/>
+            ))
+        );
+    } else {
+        return(
             <div onMouseDown={MouseClicking} onMouseUp={MouseRelease}
             onMouseMove={MouseMoving} id={`order-${savedChildrenArray.length + 1}`}
             style={{ "order": savedChildrenArray.length + 1 }}
@@ -36,15 +57,71 @@ export function SettingsButtons() {
                 <div className="separator_aa63ab"></div>
             </div>
         );
+    }
+}
+function LoadSaved() {
+    if (saved.length > 1) {
+        return(
+            saved.map((html, index) => (
+                <div key={index} id={"RemoveWrapperSaved"}
+                dangerouslySetInnerHTML={{ __html: html }}/>
+            ))
+        );
     } else {
-        return (
-            <p style={{ color:"azure" }}>Please load chatbar buttons.</p>
+        return(
+            <div className="buttonSlotContainer">
+                <div className="buttonSlot"></div>
+            </div>
         );
     }
 }
 
-let foundElement = 0;
-let selectedButton: HTMLElement | null = null;
+export default function ChatBarSettings() {
+    return (
+        <>
+            <div className="buttonContainer wrapper__72c38">
+                <div className="buttonElementContainer">
+                    {savedChildrenArray.map((html, index) => (
+                        <div onMouseDown={MouseClicking} onMouseUp={MouseRelease}
+                        onMouseMove={MouseMoving} key={index} id={`order-${index}`}
+                        style={{ "order": index }}
+                        className="vc-chatbar-discord-button buttonElement"
+                        dangerouslySetInnerHTML={{ __html: html }}/>
+                    ))}
+                    <LoadNonSaved/>
+                    <SettingsButtons/>
+                </div>
+            </div>
+            <div className="chatBarButtonPlacement wrapper__72c38">
+                <LoadSaved/>
+            </div>
+            <div onClick={saveLayout} className="saveButton wrapper__72c38">
+                <p>save layout</p>
+            </div>
+            <div onClick={resetLayout} className="saveButton wrapper__72c38">
+                <p>reset layout</p>
+            </div>
+        </>
+    );
+}
+
+async function saveLayout() {
+    console.log("[chatbarlayout] saving layout");
+    const nonSavedbuttons = document.querySelector(".buttonElementContainer")?.children;
+    const savedButton = document.querySelector(".chatBarButtonPlacement")?.children;
+
+    const nonSavedArray = Array.from(nonSavedbuttons ?? []).map(el => el.outerHTML);
+    const savedArray = Array.from(savedButton ?? []).map(el => el.outerHTML);
+
+    await DataStore.set("ChatBarLayout.nonSavedLayout", nonSavedArray);
+    await DataStore.set("ChatBarLayout.savedLayout", savedArray);
+}
+async function resetLayout() {
+    await DataStore.set("ChatBarLayout.nonSavedLayout", "");
+    await DataStore.set("ChatBarLayout.savedLayout", "");
+    console.log("[ChatBarLayout] removed nonsaved", nonSaved.length);
+    console.log("[ChatBarLayout] remove saved", saved.length);
+}
 
 function MouseClicking(e) {
     const selectedElement = (e.target as HTMLElement).closest(".buttonElement") as HTMLElement;
@@ -63,10 +140,9 @@ function MouseClicking(e) {
             const aloneParentSlot = slotContainer.firstElementChild as HTMLElement;
             const aloneSlot = aloneParentSlot.firstElementChild as HTMLElement;
             aloneSlot.className = "buttonSlot";
-            return;
         }
         for (let i = 0; i < slotContainer.children.length; i++){
-            (slotContainer.children[i + 1] as HTMLElement).style.order = String(i);
+            (slotContainer.children[i] as HTMLElement).style.order = String(i);
         }
         return;
     }
@@ -83,6 +159,8 @@ function MouseMoving(e) {
     left: ${e.clientX}px;
     top: ${e.clientY}px;
     transform: translate(-50%, -50%);`);
+    console.log("[chatbarlayout] mouse position", e.clientX, e.clientY);
+
     const element = document.elementsFromPoint(e.clientX, e.clientY);
     const selectedSlot = element.find(el => el.classList.contains("buttonSlotContainer")) as HTMLElement;
     const hoverableSlot = selectedSlot?.firstElementChild as HTMLElement;
@@ -91,7 +169,6 @@ function MouseMoving(e) {
         return;
     }
     currentButton.style.pointerEvents = "auto";
-    console.log("[chatbarlayout] mouse position", e.clientX, e.clientY);
 }
 function MouseRelease(e) {
     foundElement = 0;
@@ -124,30 +201,6 @@ function MouseRelease(e) {
     selectedButton?.parentElement?.insertBefore(slotBefore, selectedButton);
     selectedButton?.after(slotAfter);
     for (let i = 0; i < slotContainer.children.length; i++){
-        (slotContainer.children[i + 1] as HTMLElement).style.order = String(i);
+        (slotContainer.children[i] as HTMLElement).style.order = String(i);
     }
-}
-
-export default function ChatBarSettings() {
-    return (
-        <>
-            <div className="buttonContainer wrapper__72c38">
-                <div className="buttonElementContainer">
-                    {savedChildrenArray.map((html, index) => (
-                        <div onMouseDown={MouseClicking} onMouseUp={MouseRelease}
-                        onMouseMove={MouseMoving} key={index} id={`order-${index}`}
-                        style={{ "order": index }}
-                        className="vc-chatbar-discord-button buttonElement"
-                        dangerouslySetInnerHTML={{ __html: html }}/>
-                    ))}
-                    <SettingsButtons/>
-                </div>
-            </div>
-            <div className="chatBarButtonPlacement wrapper__72c38">
-                <div className="buttonSlotContainer">
-                    <div className="buttonSlot"></div>
-                </div>
-            </div>
-        </>
-    );
 }
