@@ -7,7 +7,7 @@
 import "./style.css";
 
 import { DataStore } from "@api/index";
-import { React } from "@webpack/common";
+import { React, useEffect } from "@webpack/common";
 
 import { nonSaved, saved } from "./index";
 
@@ -27,8 +27,8 @@ export function SettingsButtons() {
 
     ).map(child => (child.cloneNode(true) as Element).outerHTML);
     console.log("[chatbarlayout] array length", savedChildrenArray.length);
+    if (nonSaved.length > 1) { return; }
     if (children && !miniChatBar) {
-        if (nonSaved.length > 1) { return; }
         savedChildrenArray = childrenArray;
         console.log("[ChatBarLayout] updated childrenArray", savedChildrenArray);
         return;
@@ -49,6 +49,7 @@ function LoadNonSaved() {
             ))
         );
     } else {
+        if (savedChildrenArray.length === 0) { return; }
         return(
             <div onMouseDown={MouseClicking} onMouseUp={MouseRelease}
             onMouseMove={MouseMoving} id={`order-${savedChildrenArray.length + 1}`}
@@ -77,6 +78,45 @@ function LoadSaved() {
 }
 
 export default function ChatBarSettings() {
+    useEffect(() => {
+        const ElementContainer = document.querySelector(".buttonElementContainer");
+        const PlacementContainer = document.querySelector(".chatBarButtonPlacement");
+        const wrappersNon = Array.from(ElementContainer?.children ?? []).filter(child =>
+            child.id === "RemoveWrapperNon"
+        );
+        const wrappersSaved = Array.from(PlacementContainer?.children ?? []).filter(child =>
+            child.id === "RemoveWrapperSaved"
+        );
+        for (let i=0; i<nonSaved.length; i++){
+            const Wrapper = ElementContainer?.children[i];
+            console.log("[chatbarlayout] wrapper", Wrapper);
+            const button = Wrapper?.firstElementChild as HTMLElement;
+            ElementContainer?.appendChild(button);
+            button.addEventListener("mousedown", MouseClicking);
+            button.addEventListener("mousemove", MouseMoving);
+            button.addEventListener("mouseup", MouseRelease);
+        }
+        for (let j=0; j<wrappersNon.length; j++){
+            wrappersNon[j].remove();
+            console.log("[chatbarlayout] removing wrappers", wrappersNon[j]);
+        }
+        for (let i=0; i<saved.length; i++){
+            const Wrapper = PlacementContainer?.children[i];
+            console.log("[chatbarlayout] wrapper", Wrapper);
+            const button = Wrapper?.firstElementChild as HTMLElement;
+            PlacementContainer?.appendChild(button);
+            if (button.classList.contains("buttonElement")){
+                button.addEventListener("mousedown", MouseClicking);
+                button.addEventListener("mousemove", MouseMoving);
+                button.addEventListener("mouseup", MouseRelease);
+            }
+        }
+        for (let j=0; j<wrappersSaved.length; j++){
+            wrappersSaved[j].remove();
+            console.log("[chatbarlayout] removing wrappers", wrappersSaved[j]);
+        }
+    }, [LoadNonSaved, LoadSaved]);
+
     return (
         <>
             <div className="buttonContainer wrapper__72c38">
@@ -164,18 +204,15 @@ function MouseMoving(e) {
     const element = document.elementsFromPoint(e.clientX, e.clientY);
     const selectedSlot = element.find(el => el.classList.contains("buttonSlotContainer")) as HTMLElement;
     const hoverableSlot = selectedSlot?.firstElementChild as HTMLElement;
-    if (hoverableSlot.classList.contains("slotHoverable")) {
-        currentButton.style.pointerEvents = "none";
-        return;
-    }
     currentButton.style.pointerEvents = "auto";
 }
 function MouseRelease(e) {
     foundElement = 0;
     const currentButton = selectedButton as HTMLElement;
+    const element = document.elementsFromPoint(e.clientX, e.clientY);
     window.removeEventListener("mousemove", MouseMoving);
     window.removeEventListener("mouseup", MouseRelease);
-    const element = document.elementsFromPoint(e.clientX, e.clientY);
+
     const selectedSlot = element.find(el => el.classList.contains("buttonSlotContainer")) as HTMLElement;
     const buttonContainer = document.querySelector(".buttonElementContainer") as HTMLElement;
     if (!selectedSlot?.classList.contains("buttonSlotContainer")) {
