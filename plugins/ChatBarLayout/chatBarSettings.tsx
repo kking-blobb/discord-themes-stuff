@@ -9,7 +9,7 @@ import "./style.css";
 import { DataStore } from "@api/index";
 import { React, useEffect } from "@webpack/common";
 
-import { nonSaved, saved } from "./index";
+import { loadButtons, nonSaved,saved } from "./index";
 
 let savedChildrenArray: string[] = [];
 
@@ -20,6 +20,7 @@ export function SettingsButtons() {
     const buttonParent = document.querySelector(".buttons__74017");
     const miniChatBar = document.querySelector(".chat_ee72fa");
     const children = buttonParent?.children;
+    if (saved.length > 1) { return; }
     const childrenArray = Array.from(children ?? []).filter(child =>
         !child.classList.contains("separator_aa63ab") &&
         !child.classList.contains("container_aa63ab") &&
@@ -27,7 +28,6 @@ export function SettingsButtons() {
 
     ).map(child => (child.cloneNode(true) as Element).outerHTML);
     console.log("[chatbarlayout] array length", savedChildrenArray.length);
-    if (nonSaved.length > 1) { return; }
     if (children && !miniChatBar) {
         savedChildrenArray = childrenArray;
         console.log("[ChatBarLayout] updated childrenArray", savedChildrenArray);
@@ -41,7 +41,7 @@ export function SettingsButtons() {
 }
 
 function LoadNonSaved() {
-    if (nonSaved.length > 1) {
+    if (nonSaved.length > 0) {
         return(
             nonSaved.map((html, index) => (
                 <div key={index} id={"RemoveWrapperNon"}
@@ -52,8 +52,9 @@ function LoadNonSaved() {
         if (savedChildrenArray.length === 0) { return; }
         return(
             <div onMouseDown={MouseClicking} onMouseUp={MouseRelease}
-            onMouseMove={MouseMoving} id={`order-${savedChildrenArray.length + 1}`}
+            onMouseMove={MouseMoving} id={`button-${savedChildrenArray.length + 1}`}
             style={{ "order": savedChildrenArray.length + 1 }}
+            aria-label={`order-${savedChildrenArray.length + 1}`}
             className="vc-chatbar-discord-button buttonElement">
                 <div className="separator_aa63ab"></div>
             </div>
@@ -61,7 +62,7 @@ function LoadNonSaved() {
     }
 }
 function LoadSaved() {
-    if (saved.length > 1) {
+    if (saved.length > 0) {
         return(
             saved.map((html, index) => (
                 <div key={index} id={"RemoveWrapperSaved"}
@@ -78,6 +79,7 @@ function LoadSaved() {
 }
 
 export default function ChatBarSettings() {
+    loadButtons();
     useEffect(() => {
         const ElementContainer = document.querySelector(".buttonElementContainer");
         const PlacementContainer = document.querySelector(".chatBarButtonPlacement");
@@ -119,12 +121,13 @@ export default function ChatBarSettings() {
 
     return (
         <>
+            <hr style={{ width: "100%" }}></hr>
             <div className="buttonContainer wrapper__72c38">
                 <div className="buttonElementContainer">
                     {savedChildrenArray.map((html, index) => (
                         <div onMouseDown={MouseClicking} onMouseUp={MouseRelease}
-                        onMouseMove={MouseMoving} key={index} id={`order-${index}`}
-                        style={{ "order": index }}
+                        onMouseMove={MouseMoving} key={index} aria-label={`order-${index}`}
+                        style={{ "order": index }} id={`button-${index}`}
                         className="vc-chatbar-discord-button buttonElement"
                         dangerouslySetInnerHTML={{ __html: html }}/>
                     ))}
@@ -217,10 +220,10 @@ function MouseRelease(e) {
     const buttonContainer = document.querySelector(".buttonElementContainer") as HTMLElement;
     if (!selectedSlot?.classList.contains("buttonSlotContainer")) {
         console.log("[chatBarLayout] letting go element", selectedButton);
-        const orderID = currentButton.id.replace("order-", "");
         currentButton.removeAttribute("style");
-        currentButton.style.order = orderID;
         buttonContainer.appendChild(currentButton);
+        const orderLabel = currentButton.ariaLabel?.replace("order-", "");
+        currentButton.style.order = orderLabel ?? "";
         return;
     }
 
