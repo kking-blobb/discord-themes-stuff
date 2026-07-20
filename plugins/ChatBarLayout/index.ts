@@ -8,13 +8,17 @@ import { DataStore } from "@api/index";
 import { definePluginSettings } from "@api/Settings";
 import definePlugin, { OptionType } from "@utils/types";
 
-import ChatBarSettings, { SettingsButtons } from "./chatBarSettings";
+import ChatBarSettings, { LeftMessageButtonImage, SettingsButtons } from "./chatBarSettings";
 
 const settings = definePluginSettings({
     ToggleLeftSideMessageButton: {
         type: OptionType.BOOLEAN,
         description: "Places the message button to the left side of the chatbar buttons",
         default: false,
+    },
+    LeftSideMessageButtonImage: {
+        type: OptionType.COMPONENT,
+        component: LeftMessageButtonImage,
     },
     chatBarButtons: {
         type: OptionType.COMPONENT,
@@ -24,17 +28,28 @@ const settings = definePluginSettings({
 
 export let nonSaved: string[] = [];
 export let saved: string[] = [];
-let LayoutLength = 0;
 
 export async function loadButtons() {
     const nonSavedButtons = await DataStore.get("ChatBarLayout.nonSavedLayout") ?? [];
     const savedButtons = await DataStore.get("ChatBarLayout.savedLayout") ?? [];
-    const savedLength = await DataStore.get("ChatBarLayout.LayoutLength") ?? [];
     console.log("[loading] saved", nonSavedButtons.length);
     console.log("[loading] nonsaved", savedButtons.length);
     nonSaved = nonSavedButtons;
     saved = savedButtons;
-    LayoutLength = savedLength;
+}
+
+function SettingOptions(){
+    const LeftMessageToggle = settings.store.ToggleLeftSideMessageButton;
+    const seperator = document.querySelector(".separator_aa63ab") as HTMLElement;
+    const messageButton = document.querySelector(".container_aa63ab") as HTMLElement;
+
+    if (LeftMessageToggle === true) {
+        seperator.style.order = "-19";
+        messageButton.style.order = "-20";
+    } else {
+        seperator.style.order = "500";
+        messageButton.style.order = "501";
+    }
 }
 
 export default definePlugin({
@@ -46,9 +61,8 @@ export default definePlugin({
         console.log("[ChatBarLayout] Plugin started.");
         loadButtons();
         const mutationObserver = new MutationObserver(mutations => {
-            const LeftMessageToggle = settings.store.ToggleLeftSideMessageButton;
             const chatbar = document.querySelector(".buttons__74017");
-            const miniChatBar = document.querySelector("chat_ee72fa");
+            const miniChatBar = document.querySelector(".chat_ee72fa");
             if (chatbar && !miniChatBar) {
                 console.log("[ChatBarLayout] Found chatbar", chatbar);
                 const buttons = chatbar.children;
@@ -57,26 +71,24 @@ export default definePlugin({
                     !button.classList.contains("container_aa63ab") &&
                     button.tagName !== "SPAN";
                 });
-                for (let i=0; i < buttonsArray.length; i++){
+                for (let i = 0; i < buttonsArray.length; i++){
                     console.log("[chatbarlayout] placing id", buttonsArray[i]);
                     buttonsArray[i].id = `button-${i}`;
                 }
-                const seperator = document.querySelector(".separator_aa63ab") as HTMLElement;
-                const messageButton = document.querySelector(".container_aa63ab") as HTMLElement;
-                if (LeftMessageToggle === true) {
-                    seperator.style.order = "-1";
-                    messageButton.style.order = "-2";
-                } else {
-                    seperator.style.order = "500";
-                    messageButton.style.order = "501";
+                SettingOptions();
+                if (saved.length < 1){
+                    console.log("[chatbarlayout] no saved buttons");
+                    SettingsButtons();
+                    return;
                 }
                 let c = 0;
                 let s = 0;
                 while(c < buttonsArray.length){
                     const Element = buttonsArray[c] as HTMLElement;
                     if (s >= saved.length){
-                        console.log("[chatbarlayout] found no matching ids");
+                        console.log("[chatbarlayout] all ids didnt match");
                         Element.style.display = "none";
+                        Element.ariaLabel = "notSelected";
                         c++;
                         s = 0;
                     }
@@ -88,8 +100,16 @@ export default definePlugin({
                     console.log("[chatbarlayout] Chatbar Element [c]", Element);
                     console.log("[chatbarlayout] Saved Element [s]", savedElement);
 
+                    if (Element.getAttribute("aria-label")) {
+                        console.log("[chatbarlayout] found arialabel");
+                        c++;
+                        s = 0;
+                    }
+                    // above should skip certain buttons and keeps its styles
+                    // below should only apply styles and attributes once
                     if (Element.id === savedElement.id) {
                         Element.style.order = savedElement.style.order;
+                        Element.ariaLabel = "selected";
                         console.log("[chatbarlayout] found matching id");
                         c++;
                         s = 0;
@@ -98,8 +118,7 @@ export default definePlugin({
                         s++;
                     }
                 }
-                SettingsButtons();
-                console.log("[ChatBarLayout] updated Settings");
+                console.log("[ChatBarLayout] reached end");
             }
         });
         const BODY = document.body;

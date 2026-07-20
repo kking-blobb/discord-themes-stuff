@@ -155,7 +155,10 @@ async function saveLayout() {
 
     const nonSavedArray = Array.from(nonSavedbuttons ?? []).map(el => el.outerHTML);
     const savedArray = Array.from(savedButton ?? []).map(el => el.outerHTML);
-
+    if (savedButton?.length === 1){
+        resetLayout();
+        return;
+    }
     await DataStore.set("ChatBarLayout.nonSavedLayout", nonSavedArray);
     await DataStore.set("ChatBarLayout.savedLayout", savedArray);
 }
@@ -164,6 +167,16 @@ async function resetLayout() {
     await DataStore.set("ChatBarLayout.savedLayout", "");
     console.log("[ChatBarLayout] removed nonsaved", nonSaved.length);
     console.log("[ChatBarLayout] remove saved", saved.length);
+}
+
+export function LeftMessageButtonImage(){
+    return(
+        <img src="https://raw.githubusercontent.com/kking-blobb/discord-themes-stuff/refs/heads/main/plugins/PluginImages/Message-Button-Left.png"
+        style={{ "height":"30%","width":"30%","borderRadius":"10px" }}
+        className="wrapper__72c38"
+        draggable={false}
+        />
+    );
 }
 
 function MouseClicking(e) {

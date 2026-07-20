@@ -65,6 +65,7 @@
     min-width: 32px !important;
     min-height: 32px !important;
     padding: 0% !important;
+    z-index: 5;
     cursor: grab;
 }
 
@@ -74,4 +75,22 @@
 
 .buttonElement:active {
     cursor: grabbing;
+}
+
+.saveButton {
+    background-color: #30965b;
+    min-width: 30px !important;
+    width: fit-content;
+    min-height: 40px;
+    margin: 5px;
+    transition: background-color 0.2s ease-out;
+}
+
+.saveButton:hover {
+    background-color: #52a876;
+}
+
+.saveButton:active {
+    background-color: #2b754a;
+    padding: 6px;
 }
