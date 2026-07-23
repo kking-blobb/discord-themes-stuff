@@ -4,11 +4,12 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import { addChatBarButton } from "@api/ChatButtons";
 import { DataStore } from "@api/index";
 import { definePluginSettings } from "@api/Settings";
 import definePlugin, { OptionType } from "@utils/types";
 
-import ChatBarSettings, { LeftMessageButtonImage, SettingsButtons } from "./chatBarSettings";
+import ChatBarSettings, { LeftMessageButtonImage, seperatorButton ,SettingsButtons } from "./chatBarSettings";
 
 const settings = definePluginSettings({
     ToggleLeftSideMessageButton: {
@@ -32,17 +33,17 @@ export let saved: string[] = [];
 export async function loadButtons() {
     const nonSavedButtons = await DataStore.get("ChatBarLayout.nonSavedLayout") ?? [];
     const savedButtons = await DataStore.get("ChatBarLayout.savedLayout") ?? [];
-    console.log("[loading] saved", nonSavedButtons.length);
-    console.log("[loading] nonsaved", savedButtons.length);
+    console.log("[loading] nonsaved", nonSavedButtons.length);
+    console.log("[loading] saved", savedButtons.length);
     nonSaved = nonSavedButtons;
     saved = savedButtons;
 }
 
 function SettingOptions(){
     const LeftMessageToggle = settings.store.ToggleLeftSideMessageButton;
-    const seperator = document.querySelector(".separator_aa63ab") as HTMLElement;
-    const messageButton = document.querySelector(".container_aa63ab") as HTMLElement;
 
+    const messageButton = document.querySelector(".container_aa63ab") as HTMLElement;
+    const seperator = messageButton.previousElementSibling as HTMLElement;
     if (LeftMessageToggle === true) {
         seperator.style.order = "-19";
         messageButton.style.order = "-20";
@@ -99,7 +100,14 @@ export default definePlugin({
                     console.log("[chatbarlayout] c", c, "s", s);
                     console.log("[chatbarlayout] Chatbar Element [c]", Element);
                     console.log("[chatbarlayout] Saved Element [s]", savedElement);
+                    console.log("[chatbarlayout] data-custom-button", savedElement.getAttribute("data-custom-button"));
 
+                    if (savedElement.getAttribute("data-custom-button") === "true") {
+                        addChatBarButton("seperator", seperatorButton);
+                        const customButton = document.querySelector(".separator_aa63ab") as HTMLElement;
+                        customButton.id = savedElement.id;
+                        buttonsArray.push(customButton);
+                    }
                     if (Element.getAttribute("aria-label")) {
                         console.log("[chatbarlayout] found arialabel");
                         c++;

@@ -20,12 +20,11 @@ export function SettingsButtons() {
     const buttonParent = document.querySelector(".buttons__74017");
     const miniChatBar = document.querySelector(".chat_ee72fa");
     const children = buttonParent?.children;
-    if (saved.length > 1) { return; }
+    if (saved.length > 1) { savedChildrenArray = []; return; }
     const childrenArray = Array.from(children ?? []).filter(child =>
         !child.classList.contains("separator_aa63ab") &&
         !child.classList.contains("container_aa63ab") &&
         child.tagName !== "SPAN"
-
     ).map(child => (child.cloneNode(true) as Element).outerHTML);
     console.log("[chatbarlayout] array length", savedChildrenArray.length);
     if (children && !miniChatBar) {
@@ -55,6 +54,7 @@ function LoadNonSaved() {
             onMouseMove={MouseMoving} id={`button-${savedChildrenArray.length + 1}`}
             style={{ "order": savedChildrenArray.length + 1 }}
             aria-label={`order-${savedChildrenArray.length + 1}`}
+            data-custom-button="true"
             className="vc-chatbar-discord-button buttonElement">
                 <div className="separator_aa63ab"></div>
             </div>
@@ -129,6 +129,7 @@ export default function ChatBarSettings() {
                         onMouseMove={MouseMoving} key={index} aria-label={`order-${index}`}
                         style={{ "order": index }} id={`button-${index}`}
                         className="vc-chatbar-discord-button buttonElement"
+                        data-custom-button="false"
                         dangerouslySetInnerHTML={{ __html: html }}/>
                     ))}
                     <LoadNonSaved/>
@@ -161,12 +162,21 @@ async function saveLayout() {
     }
     await DataStore.set("ChatBarLayout.nonSavedLayout", nonSavedArray);
     await DataStore.set("ChatBarLayout.savedLayout", savedArray);
+    loadButtons();
+    console.log("[ChatBarLayout] nonsaved", nonSaved.length);
+    console.log("[ChatBarLayout] saved", saved.length);
 }
 async function resetLayout() {
     await DataStore.set("ChatBarLayout.nonSavedLayout", "");
     await DataStore.set("ChatBarLayout.savedLayout", "");
     console.log("[ChatBarLayout] removed nonsaved", nonSaved.length);
     console.log("[ChatBarLayout] remove saved", saved.length);
+}
+
+export function seperatorButton(){
+    return(
+        <div className="separator_aa63ab"/>
+    );
 }
 
 export function LeftMessageButtonImage(){
