@@ -139,11 +139,13 @@ export default function ChatBarSettings() {
             <div className="chatBarButtonPlacement wrapper__72c38">
                 <LoadSaved/>
             </div>
-            <div onClick={saveLayout} className="saveButton wrapper__72c38">
-                <p>save layout</p>
-            </div>
-            <div onClick={resetLayout} className="saveButton wrapper__72c38">
-                <p>reset layout</p>
+            <div style={{ display: "flex" }}>
+                <div onClick={saveLayout} className="saveButton wrapper__72c38">
+                    <p>save layout</p>
+                </div>
+                <div onClick={resetLayout} className="resetButton wrapper__72c38">
+                    <p>reset layout</p>
+                </div>
             </div>
         </>
     );

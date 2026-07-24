@@ -43,13 +43,15 @@ function SettingOptions(){
     const LeftMessageToggle = settings.store.ToggleLeftSideMessageButton;
 
     const messageButton = document.querySelector(".container_aa63ab") as HTMLElement;
-    const seperator = messageButton.previousElementSibling as HTMLElement;
-    if (LeftMessageToggle === true) {
-        seperator.style.order = "-19";
-        messageButton.style.order = "-20";
-    } else {
-        seperator.style.order = "500";
-        messageButton.style.order = "501";
+    if (messageButton) {
+        const seperator = messageButton.previousElementSibling as HTMLElement;
+        if (LeftMessageToggle === true) {
+            seperator.style.order = "-19";
+            messageButton.style.order = "-20";
+        } else {
+            seperator.style.order = "500";
+            messageButton.style.order = "501";
+        }
     }
 }
 
