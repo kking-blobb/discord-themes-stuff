@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { addChatBarButton } from "@api/ChatButtons";
+import { addChatBarButton, removeChatBarButton } from "@api/ChatButtons";
 import { DataStore } from "@api/index";
 import { definePluginSettings } from "@api/Settings";
 import definePlugin, { OptionType } from "@utils/types";
@@ -77,6 +77,9 @@ export default definePlugin({
                 for (let i = 0; i < buttonsArray.length; i++){
                     console.log("[chatbarlayout] placing id", buttonsArray[i]);
                     buttonsArray[i].id = `button-${i}`;
+                    if (saved.length < 1){
+                        (buttonsArray[i] as HTMLElement).style.display = "";
+                    }
                 }
                 SettingOptions();
                 if (saved.length < 1){
@@ -92,6 +95,9 @@ export default definePlugin({
                         console.log("[chatbarlayout] all ids didnt match");
                         Element.style.display = "none";
                         Element.ariaLabel = "notSelected";
+                        if (Element.getAttribute("data-custom-button") === "true") {
+                            removeChatBarButton("seperator");
+                        }
                         c++;
                         s = 0;
                     }

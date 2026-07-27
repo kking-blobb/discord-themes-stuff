@@ -169,8 +169,21 @@ async function saveLayout() {
     console.log("[ChatBarLayout] saved", saved.length);
 }
 async function resetLayout() {
+    const nonSavedbuttons = document.querySelector(".buttonElementContainer")?.children as HTMLCollection;
+    const savedButton = document.querySelector(".chatBarButtonPlacement")?.children as HTMLCollection;
     await DataStore.set("ChatBarLayout.nonSavedLayout", "");
     await DataStore.set("ChatBarLayout.savedLayout", "");
+    for (let i=0; i< nonSavedbuttons?.length; i++){
+        const Element = nonSavedbuttons[i] as HTMLElement;
+        Element.remove();
+    }
+    for (let i=0; i< savedButton?.length; i++){
+        const Element = savedButton[i] as HTMLElement;
+        Element.remove();
+    }
+    loadButtons();
+    LoadNonSaved();
+    LoadSaved();
     console.log("[ChatBarLayout] removed nonsaved", nonSaved.length);
     console.log("[ChatBarLayout] remove saved", saved.length);
 }

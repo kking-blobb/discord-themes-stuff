@@ -83,6 +83,17 @@
     width: fit-content;
     min-height: 40px;
     margin: 5px;
+    padding: 4px;
+    transition: background-color 0.2s ease-out;
+}
+
+.resetButton {
+    background-color: #963046;
+    min-width: 30px !important;
+    width: fit-content;
+    min-height: 40px;
+    margin: 5px;
+    padding: 4px;
     transition: background-color 0.2s ease-out;
 }
 
@@ -92,5 +103,14 @@
 
 .saveButton:active {
     background-color: #2b754a;
+    padding: 6px;
+}
+
+.resetButton:hover {
+    background-color: #a8525d;
+}
+
+.resetButton:active {
+    background-color: #752b3b;
     padding: 6px;
 }
