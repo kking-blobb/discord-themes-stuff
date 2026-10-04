@@ -12,10 +12,13 @@ import { React, useEffect } from "@webpack/common";
 import { loadButtons, nonSaved,saved } from "./index";
 
 let savedChildrenArray: string[] = [];
-let foundElement = false;
 let selectedButton: HTMLElement | null = null;
 let NonSavedValue = 0;
 let SavedValue = 0;
+
+const SlotHoverable = document.createElement("div");
+    SlotHoverable.className = "buttonSlotContainer";
+    SlotHoverable.innerHTML = "<div class='slotHoverable'></div>";
 
 export function SettingsButtons() {
     const buttonParent = document.querySelector(".buttons__74017");
@@ -31,7 +34,6 @@ export function SettingsButtons() {
     if (children && !miniChatBar) {
         savedChildrenArray = childrenArray;
         console.log("[ChatBarLayout] updated childrenArray", savedChildrenArray);
-        return;
     }
     if (savedChildrenArray.length === 0) {
         return (
@@ -40,8 +42,7 @@ export function SettingsButtons() {
     } else {
         return(
             savedChildrenArray.map((html, index) => (
-                <div onMouseDown={MouseClicking} onMouseUp={MouseRelease}
-                onMouseMove={MouseMoving} key={index} aria-label={`order-${index}`}
+                <div onMouseDown={MouseClicking} key={index} aria-label={`order-${index}`}
                 style={{ "order": index }} id={`button-${index}`}
                 className="vc-chatbar-discord-button buttonElement"
                 data-custom-button="false"
@@ -59,14 +60,11 @@ function LoadNonSaved() {
                 dangerouslySetInnerHTML={{ __html: html }}/>
             ))
         );
-    } else {
-        if (savedChildrenArray.length === 0) { return; }
+    } else if (savedChildrenArray.length === 0) {
         return(
-            <div onMouseDown={MouseClicking} onMouseUp={MouseRelease}
-            onMouseMove={MouseMoving} id={`button-${savedChildrenArray.length + 1}`}
-            style={{ "order": savedChildrenArray.length + 1 }}
+            <div onMouseDown={MouseClicking} id={`button-${savedChildrenArray.length + 1}`}
+            style={{ "order": savedChildrenArray.length + 1 }} data-custom-button="true"
             aria-label={`order-${savedChildrenArray.length + 1}`}
-            data-custom-button="true"
             className="vc-chatbar-discord-button buttonElement">
                 <div className="separator_aa63ab"></div>
             </div>
@@ -94,16 +92,32 @@ function updateContainers(){
     const NonSavedContainer = document.querySelector(".buttonElementContainer") as HTMLElement;
     const SavedContainer = document.querySelector(".chatBarButtonPlacement") as HTMLElement;
     if (NonSavedValue && SavedValue === 0){
+        console.log("[chatbarlayout] updating containers");
         NonSavedValue = NonSavedContainer.children.length;
         SavedValue = SavedContainer.children.length;
     }
     if (NonSavedValue !== NonSavedContainer.children.length){
+        console.log("[chatbarlayout] updating non saved container");
         NonSavedContainer.querySelectorAll(".buttonElement").forEach((el, index) => {
             const orderLabel = (el as HTMLElement).ariaLabel?.replace("order-", "");
-            (el as HTMLElement).style.order = orderLabel ?? "";
+            (el as HTMLElement).style.order = String(orderLabel);
         });
     }
     if (SavedValue !== SavedContainer.children.length){
+        console.log("[chatbarlayout] updating saved container");
+        Array.from(SavedContainer.children).forEach((child, index) => {
+            if (child.classList.contains("buttonSlotContainer") && child.nextElementSibling?.classList.contains("buttonSlotContainer")){
+                console.log("[chatbarlayout] removing slot container", child.nextElementSibling);
+                child.nextElementSibling.remove();
+            } else if (child.classList.contains("buttonElement") && child.nextElementSibling?.classList.contains("buttonElement")){
+                child.after(SlotHoverable.cloneNode(true));
+                console.log("[chatbarlayout] adding slot container", child.nextElementSibling);
+            }
+            if (SavedContainer.children.length < 2){
+                SavedContainer.appendChild(SlotHoverable.cloneNode(true));
+                SavedContainer.firstElementChild?.classList.replace("slotHoverable", "buttonSlot");
+            }
+        });
         for (let i = 0; i < SavedContainer.children.length; i++){
             (SavedContainer.children[i] as HTMLElement).style.order = String(i);
         }
@@ -119,22 +133,17 @@ export default function ChatBarSettings() {
             const button = Wrappers[i].firstElementChild as HTMLElement;
             Parent.appendChild(button);
             button.addEventListener("mousedown", MouseClicking);
-            button.addEventListener("mousemove", MouseMoving);
-            button.addEventListener("mouseup", MouseRelease);
             Wrappers[i].remove();
             console.log("[chatbarlayout] removing wrappers", Wrappers[i]);
-            if (Parent === document.querySelector(".chatBarButtonPlacement")){
-                const slotBefore = document.createElement("div");
-                    slotBefore.className = "buttonSlotContainer";
-                    slotBefore.innerHTML = "<div class='slotHoverable'></div>";
-                const slotAfter = slotBefore.cloneNode(true) as HTMLElement;
+            if (Parent.classList.contains("chatBarButtonPlacement")){
                 if (!button.previousElementSibling?.classList.contains("buttonSlotContainer")) {
-                    Parent.insertBefore(slotBefore, button);
+                    Parent.insertBefore(SlotHoverable.cloneNode(true), button);
                 }
-                button.after(slotAfter);
+                button.after(SlotHoverable.cloneNode(true));
             }
         }
         updateContainers();
+        console.log("[chatbarlayout] updated containers (ChatBarSettings)");
     }, [LoadNonSaved, LoadSaved]);
 
     return (
@@ -187,12 +196,8 @@ async function resetLayout() {
     savedButton.querySelectorAll(".buttonElement").forEach(el =>
         nonSavedbuttons.appendChild(el)
     );
-    savedButton.innerHTML = "";
-    const Slot = document.createElement("div");
-        Slot.className = "buttonSlotContainer";
-        Slot.innerHTML = "<div class='buttonSlot'></div>";
-    savedButton.appendChild(Slot);
     updateContainers();
+    console.log("[chatbarlayout] updating containers (resetLayout)");
     console.log("[ChatBarLayout] removed nonsaved", nonSaved.length);
     console.log("[ChatBarLayout] remove saved", saved.length);
 }
@@ -212,73 +217,54 @@ export function LeftMessageButtonImage(){
     );
 }
 
+let Offset = { x: 0, y: 0 };
 function MouseClicking(e) {
     const selectedElement = (e.target as HTMLElement).closest(".buttonElement") as HTMLElement;
+    const rect = selectedElement.getBoundingClientRect();
     selectedButton = selectedElement;
-    foundElement = true;
+    const container = document.querySelector(".layer_bc663c:not([class*=' '])") as HTMLElement;
+    container.appendChild(selectedElement);
+    Offset = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     window.addEventListener("mousemove", MouseMoving);
     window.addEventListener("mouseup", MouseRelease);
     console.log("[chatBarLayout] grabbing Element", selectedElement);
 
-    const slotContainer = document.querySelector(".chatBarButtonPlacement") as HTMLElement;
-    if (selectedElement.parentElement === slotContainer) {
-        const nextsiblingSlot = selectedElement.nextElementSibling;
-        nextsiblingSlot?.remove();
-        console.log("[chatBarLayout] slotContainer children length", slotContainer.children.length);
-        if (slotContainer.children.length === 2){
-            const aloneParentSlot = slotContainer.firstElementChild as HTMLElement;
-            const aloneSlot = aloneParentSlot.firstElementChild as HTMLElement;
-            aloneSlot.className = "buttonSlot";
-        }
-        updateContainers();
-        return;
-    }
+    MouseMoving(e);
+    updateContainers();
+    console.log("[chatbarlayout] updating containers (MouseClicking)");
 }
 function MouseMoving(e) {
-    if (foundElement === false) {
-        return;
-    }
     const currentButton = selectedButton as HTMLElement;
-    const container = document.querySelector(".layer_bc663c:not([class*=' '])") as HTMLElement;
-    container.appendChild(currentButton);
-    currentButton.children[0]?.setAttribute("style", "pointer-events: none;");
-    currentButton?.setAttribute("style", `position: absolute;
-    left: ${e.clientX}px;
-    top: ${e.clientY}px;
-    transform: translate(-50%, -50%);`);
-    console.log("[chatbarlayout] mouse position", e.clientX, e.clientY);
-
-    const element = document.elementsFromPoint(e.clientX, e.clientY);
-    const selectedSlot = element.find(el => el.classList.contains("buttonSlotContainer")) as HTMLElement;
-    const hoverableSlot = selectedSlot?.firstElementChild as HTMLElement;
-    currentButton.style.pointerEvents = "auto";
+    currentButton?.setAttribute("style", `position: fixed;
+    Left: ${e.clientX - Offset.x}px;
+    Top: ${e.clientY - Offset.y}px;`);
+    const MousePoint = document.elementsFromPoint(e.clientX, e.clientY);
+    const Slot = MousePoint.find(el => el.classList.contains("buttonSlotContainer")) as HTMLElement;
+    if (Slot.classList.contains("buttonSlotContainer")) {
+        currentButton.style.pointerEvents = "none";
+    } else { currentButton.style.pointerEvents = "auto"; }
 }
 function MouseRelease(e) {
-    foundElement = false;
     const currentButton = selectedButton as HTMLElement;
-    const element = document.elementsFromPoint(e.clientX, e.clientY);
     window.removeEventListener("mousemove", MouseMoving);
     window.removeEventListener("mouseup", MouseRelease);
 
-    const selectedSlot = element.find(el => el.classList.contains("buttonSlotContainer")) as HTMLElement;
+    const selectedSlot = (e.target as HTMLElement).closest(".buttonSlotContainer") as HTMLElement;
     const buttonContainer = document.querySelector(".buttonElementContainer") as HTMLElement;
     if (!selectedSlot?.classList.contains("buttonSlotContainer")) {
         console.log("[chatBarLayout] letting go element", selectedButton);
         currentButton.removeAttribute("style");
         buttonContainer.appendChild(currentButton);
         updateContainers();
+        console.log("[chatbarlayout] updating containers (MouseRelease 1)");
         return;
+    } else if (selectedSlot.firstElementChild?.classList.contains("buttonSlot")) {
+        (selectedSlot.firstElementChild as HTMLElement).className = "slotHoverable";
     }
 
     console.log("[chatbarlayout] found slot for selected button");
     selectedSlot.after(currentButton);
-    selectedSlot.remove();
     currentButton.removeAttribute("style");
-    const SlotBefore = document.createElement("div");
-        SlotBefore.className = "buttonSlotContainer";
-        SlotBefore.innerHTML = "<div class='slotHoverable'></div>";
-    const SlotAfter = SlotBefore.cloneNode(true) as HTMLElement;
-    selectedButton?.parentElement?.insertBefore(SlotBefore, selectedButton);
-    selectedButton?.after(SlotAfter);
     updateContainers();
+    console.log("[chatbarlayout] updating containers (MouseRelease 2)");
 }
