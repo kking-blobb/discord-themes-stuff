@@ -9,9 +9,8 @@ import "./style.css";
 import { DataStore } from "@api/index";
 import { React, useEffect } from "@webpack/common";
 
-import { loadButtons, nonSaved,saved } from "./index";
+import { loadButtons, nonSaved, OriginalArray, saved } from "./index";
 
-let savedChildrenArray: string[] = [];
 let selectedButton: HTMLElement | null = null;
 let NonSavedValue = 0;
 let SavedValue = 0;
@@ -21,27 +20,11 @@ const SlotHoverable = document.createElement("div");
     SlotHoverable.innerHTML = "<div class='slotHoverable'></div>";
 
 export function SettingsButtons() {
-    const buttonParent = document.querySelector(".buttons__74017");
-    const miniChatBar = document.querySelector(".chat_ee72fa");
-    const children = buttonParent?.children;
-    if (saved.length > 1) { savedChildrenArray = []; return; }
-    const childrenArray = Array.from(children ?? []).filter(child =>
-        !child.classList.contains("separator_aa63ab") &&
-        !child.classList.contains("container_aa63ab") &&
-        child.tagName !== "SPAN"
-    ).map(child => (child.cloneNode(true) as Element).outerHTML);
-    console.log("[chatbarlayout] array length", savedChildrenArray.length);
-    if (children && !miniChatBar) {
-        savedChildrenArray = childrenArray;
-        console.log("[ChatBarLayout] updated childrenArray", savedChildrenArray);
-    }
-    if (savedChildrenArray.length === 0) {
-        return (
-            <p style={{ color:"azure" }}>Please load chatbar buttons.</p>
-        );
-    } else {
+    if (!OriginalArray.length && saved.length < 1) {
+        return (<p style={{ color:"azure" }}>Please load chatbar buttons.</p>);
+    } else if (saved.length < 1) {
         return(
-            savedChildrenArray.map((html, index) => (
+            OriginalArray.map((html, index) => (
                 <div onMouseDown={MouseClicking} key={index} aria-label={`order-${index}`}
                 style={{ "order": index }} id={`button-${index}`}
                 className="vc-chatbar-discord-button buttonElement"
@@ -60,11 +43,11 @@ function LoadNonSaved() {
                 dangerouslySetInnerHTML={{ __html: html }}/>
             ))
         );
-    } else if (savedChildrenArray.length === 0) {
+    } else if (OriginalArray.length !== 0) {
         return(
-            <div onMouseDown={MouseClicking} id={`button-${savedChildrenArray.length + 1}`}
-            style={{ "order": savedChildrenArray.length + 1 }} data-custom-button="true"
-            aria-label={`order-${savedChildrenArray.length + 1}`}
+            <div onMouseDown={MouseClicking} id={`button-${OriginalArray.length + 1}`}
+            style={{ "order": OriginalArray.length + 1 }} data-custom-button="true"
+            aria-label={`order-${OriginalArray.length + 1}`} data-button-id={`button-${OriginalArray.length + 1}`}
             className="vc-chatbar-discord-button buttonElement">
                 <div className="separator_aa63ab"></div>
             </div>
@@ -91,36 +74,35 @@ function LoadSaved() {
 function updateContainers(){
     const NonSavedContainer = document.querySelector(".buttonElementContainer") as HTMLElement;
     const SavedContainer = document.querySelector(".chatBarButtonPlacement") as HTMLElement;
-    if (NonSavedValue && SavedValue === 0){
-        console.log("[chatbarlayout] updating containers");
-        NonSavedValue = NonSavedContainer.children.length;
-        SavedValue = SavedContainer.children.length;
-    }
     if (NonSavedValue !== NonSavedContainer.children.length){
         console.log("[chatbarlayout] updating non saved container");
         NonSavedContainer.querySelectorAll(".buttonElement").forEach((el, index) => {
             const orderLabel = (el as HTMLElement).ariaLabel?.replace("order-", "");
             (el as HTMLElement).style.order = String(orderLabel);
         });
+        NonSavedValue = NonSavedContainer.children.length;
+        console.log("[chatbarlayout] updated non saved container order", NonSavedValue);
     }
     if (SavedValue !== SavedContainer.children.length){
         console.log("[chatbarlayout] updating saved container");
         Array.from(SavedContainer.children).forEach((child, index) => {
-            if (child.classList.contains("buttonSlotContainer") && child.nextElementSibling?.classList.contains("buttonSlotContainer")){
+            const NextSibling = child.nextElementSibling as HTMLElement;
+            if (child.classList.contains("buttonSlotContainer") && NextSibling?.classList.contains("buttonSlotContainer")){
                 console.log("[chatbarlayout] removing slot container", child.nextElementSibling);
-                child.nextElementSibling.remove();
-            } else if (child.classList.contains("buttonElement") && child.nextElementSibling?.classList.contains("buttonElement")){
+                child.remove();
+            } else if (child.classList.contains("buttonElement") && !NextSibling?.classList.contains("buttonSlotContainer")){
                 child.after(SlotHoverable.cloneNode(true));
                 console.log("[chatbarlayout] adding slot container", child.nextElementSibling);
             }
             if (SavedContainer.children.length < 2){
-                SavedContainer.appendChild(SlotHoverable.cloneNode(true));
-                SavedContainer.firstElementChild?.classList.replace("slotHoverable", "buttonSlot");
+                child.firstElementChild?.classList.replace("slotHoverable", "buttonSlot");
             }
         });
         for (let i = 0; i < SavedContainer.children.length; i++){
             (SavedContainer.children[i] as HTMLElement).style.order = String(i);
         }
+        SavedValue = SavedContainer.children.length;
+        console.log("[chatbarlayout] updated saved container order", SavedValue);
     }
 }
 
@@ -128,6 +110,8 @@ export default function ChatBarSettings() {
     loadButtons();
     useEffect(() => {
         const Wrappers = Array.from(document.querySelectorAll("#Wrapper"));
+        const Container = document.querySelector(".chatBarButtonPlacement") as HTMLElement;
+        Container.firstElementChild?.before(SlotHoverable.cloneNode(true));
         for (let i = 0; i < Wrappers.length; i++){
             const Parent = Wrappers[i].parentElement as HTMLElement;
             const button = Wrappers[i].firstElementChild as HTMLElement;
@@ -135,12 +119,6 @@ export default function ChatBarSettings() {
             button.addEventListener("mousedown", MouseClicking);
             Wrappers[i].remove();
             console.log("[chatbarlayout] removing wrappers", Wrappers[i]);
-            if (Parent.classList.contains("chatBarButtonPlacement")){
-                if (!button.previousElementSibling?.classList.contains("buttonSlotContainer")) {
-                    Parent.insertBefore(SlotHoverable.cloneNode(true), button);
-                }
-                button.after(SlotHoverable.cloneNode(true));
-            }
         }
         updateContainers();
         console.log("[chatbarlayout] updated containers (ChatBarSettings)");
@@ -174,14 +152,11 @@ async function saveLayout() {
     console.log("[chatbarlayout] saving layout");
     const nonSavedbuttons = document.querySelector(".buttonElementContainer")?.children;
     const savedButton = document.querySelector(".chatBarButtonPlacement")?.children;
-
     const nonSavedArray = Array.from(nonSavedbuttons ?? []).map(el => el.outerHTML);
     const savedArray = Array.from(savedButton ?? []).filter(child =>
         !child.classList.contains("buttonSlotContainer")).map(el => el.outerHTML);
-    if (savedButton?.length === 1){
-        resetLayout();
-        return;
-    }
+
+    if (savedButton?.length === 1){ resetLayout();return; }
     await DataStore.set("ChatBarLayout.nonSavedLayout", nonSavedArray);
     await DataStore.set("ChatBarLayout.savedLayout", savedArray);
     loadButtons();
@@ -202,11 +177,9 @@ async function resetLayout() {
     console.log("[ChatBarLayout] remove saved", saved.length);
 }
 
-export function seperatorButton(){
-    return(
-        <div className="separator_aa63ab"/>
-    );
-}
+export const seperatorButton = (id: string, order: string) => () => (
+    <div id={id} className="separator_aa63ab" aria-label="custom-button" style={{ order }}></div>
+);
 export function LeftMessageButtonImage(){
     return(
         <img src="https://raw.githubusercontent.com/kking-blobb/discord-themes-stuff/refs/heads/main/plugins/PluginImages/Message-Button-Left.png"
